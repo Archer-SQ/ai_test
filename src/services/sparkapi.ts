@@ -18,8 +18,6 @@ const SPARK_APP_ID = process.env.REACT_APP_SPARK_APP_ID
 const SPARK_API_KEY = process.env.REACT_APP_SPARK_API_KEY
 const SPARK_API_SECRET = process.env.REACT_APP_SPARK_API_SECRET
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
 function getWebsocketUrl(): string {
     if (!SPARK_API_SECRET) {
         throw new Error('SPARK_API_SECRET is undefined');
@@ -98,6 +96,12 @@ export async function* generateStreamResponse(
                             },
                         },
                     };
+
+                    if (!SPARK_APP_ID) {
+                        console.error('SPARK_APP_ID 未设置');
+                        throw new Error('SPARK_APP_ID 未设置');
+                    }
+
                     ws.send(JSON.stringify(data));
                     resolve(generator);
                 });

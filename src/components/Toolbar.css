@@ -40,6 +40,27 @@
   margin-left: 10px;
 }
 
+@media (max-width: 768px) {
+  .toolbar {
+    left: 0;
+    top: auto;
+    bottom: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .tool-item:hover::after {
+    display: none;
+  }
+
+  .tool-item {
+    margin: 0 10px;
+  }
+}
+
 .toolbar .tool-item:first-child {
   margin-bottom: 20px; /* 给首页图标下方添加更多空间 */
 }

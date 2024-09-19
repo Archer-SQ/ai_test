@@ -10,12 +10,21 @@ interface HistoryItem {
 
 const HistoryContainer = styled.div`
   width: 100%;
+  max-width: 100%;
   height: 75vh;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-  padding: 20px;
+  overflow-x: hidden;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  
+  @media (max-width: 768px) {
+    padding: 5px;
+    margin: 20px -5px 0; // 上边距增加20px，左右保持负边距
+    width: calc(100% + 20px);
+    border-radius: 0;
+  }
 `;
 
 const MessageContainer = styled.div`

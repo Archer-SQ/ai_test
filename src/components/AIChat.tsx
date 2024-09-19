@@ -28,14 +28,16 @@ const Message = React.memo(
         onLike,
         onDislike,
         isStreaming,
+        isLastAIMessage
     }: {
         message: Message
         index: number
         onRegenerate: (index: number) => void
-        onCopy: (text: string, isUser: boolean) => void
+        onCopy: (text: string) => void
         onLike: (index: number) => void
         onDislike: (index: number) => void
-        isStreaming?: boolean
+        isStreaming: boolean
+        isLastAIMessage: boolean
     }) => {
         const [isHovered, setIsHovered] = useState(false);
         const [showLikeAnimation, setShowLikeAnimation] = useState(false);
@@ -51,17 +53,26 @@ const Message = React.memo(
             >
                 {!message.isUser && <Avatar src={message.avatar} alt="AI avatar" />}
                 <div className="message-wrapper">
-                    <div className="message">{message.text}</div>
+                    <div className="message">
+                        {message.text}
+                        {isStreaming && isLastAIMessage && <span className="blinking-cursor"></span>}
+                    </div>
                     {isHovered && !isStreaming && (
                         <div className="message-actions">
-                            <button onClick={() => onCopy(message.text, message.isUser)} title="复制">
-                                📋
-                            </button>
-                            {!message.isUser && (
+                            {message.isUser ? (
+                                <button onClick={() => onCopy(message.text)} title="复制">
+                                    📋
+                                </button>
+                            ) : (
                                 <>
-                                    <button onClick={() => onRegenerate(index)} title="重新生成">
-                                        🔄
+                                    <button onClick={() => onCopy(message.text)} title="复制">
+                                        📋
                                     </button>
+                                    {isLastAIMessage && (
+                                        <button onClick={() => onRegenerate(index)} title="重新生成">
+                                            🔄
+                                        </button>
+                                    )}
                                     <button onClick={() => {
                                         setShowLikeAnimation(true);
                                         setTimeout(() => setShowLikeAnimation(false), 1000);
@@ -89,7 +100,8 @@ const Message = React.memo(
     },
     (prevProps, nextProps) =>
         prevProps.message === nextProps.message &&
-        prevProps.isStreaming === nextProps.isStreaming
+        prevProps.isStreaming === nextProps.isStreaming &&
+        prevProps.isLastAIMessage === nextProps.isLastAIMessage
 );
 
 const LoadingDots = () => (
@@ -122,8 +134,8 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
 
     useEffect(() => {
-        setUserAvatar(`https://api.dicebear.com/6.x/avataaars/svg?seed=${Math.random()}`)
-        setAiAvatar(`https://api.dicebear.com/6.x/bottts/svg?seed=${Math.random()}`)
+        setUserAvatar('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4em0yLTEwYy0xLjEgMC0yIC45LTIgMnMuOSAyIDIgMiAyLS45IDItMi0uOS0yLTItMnptLTQgMGMtMS4xIDAtMiAuOS0yIDJzLjkgMiAyIDIgMi0uOSAyLTItLjktMi0yLTJ6bTIgN2MtMi4zMyAwLTQuMzEtMS40Ni01LjExLTMuNWgxMC4yMmMtLjggMi4wNC0yLjc4IDMuNS01LjExIDMuNXoiIGZpbGw9IiMwMDdiZmYiLz48L3N2Zz4=');
+        setAiAvatar('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTIyIDEyYzAgNS41Mi00LjQ4IDEwLTEwIDEwUzIgMTcuNTIgMiAxMiA2LjQ4IDIgMTIgMnMxMCA0LjQ4IDEwIDEwek0xMiAzYy00Ljk3IDAtOSA0LjAzLTkgOXM0LjAzIDkgOSA5IDktNC4wMyA5LTktNC4wMy05LTktOXptMCA4Yy0uNTUgMC0xIC40NS0xIDFzLjQ1IDEgMSAxIDEtLjQ1IDEtMS0uNDUtMS0xLTF6bTQgMGMtLjU1IDAtMSAuNDUtMSAxcy40NSAxIDEgMSAxLS40NSAxLTEtLjQ1LTEtMS0xem0tNy45NCA0LjYxYy4xOS42My43NiAxLjM5IDEuODggMS4zOSAxLjEyIDAgMS45My0uNzYgMi4xMy0xLjM5aDEuODZjLS40NiAxLjk3LTIuMjQgMy4zOS00LjM5IDMuMzlzLTMuOTMtMS40Mi00LjM5LTMuMzloMS45M3oiIGZpbGw9IiM0Y2FmNTAiLz48L3N2Zz4=');
     }, [])
 
     useEffect(() => {
@@ -163,6 +175,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         const currentInput = input.trim();
         setInput('');
         setIsStreaming(true);
+        setLastUserMessage(currentInput);
 
         try {
             const aiMessage: Message = {
@@ -200,7 +213,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 const newMessages = [...prevMessages];
                 newMessages[newMessages.length - 1] = {
                     ...newMessages[newMessages.length - 1],
-                    text: '发生错误，请稍后再试。',
+                    text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。`,
                 };
                 return newMessages;
             });
@@ -273,7 +286,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 const newMessages = [...prevMessages];
                 newMessages[newMessages.length - 1] = {
                     ...newMessages[newMessages.length - 1],
-                    text: '发生错误，请稍后再试。',
+                    text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。`,
                 };
                 return newMessages;
             });
@@ -305,6 +318,13 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         setCurrentModel("generalv3.5");
     }, [setCurrentModel]);
 
+    const lastAIMessageIndex = messages.reduceRight((acc, message, index) => {
+        if (acc === -1 && !message.isUser) {
+            return index;
+        }
+        return acc;
+    }, -1);
+
     return (
         <div className="chat-container">
             <div className="chat-history" ref={chatHistoryRef}>
@@ -314,10 +334,11 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                         message={message} 
                         index={index}
                         onRegenerate={handleRegenerate}
-                        onCopy={handleCopy}
+                        onCopy={(text) => handleCopy(text, message.isUser)}
                         onLike={handleLike}
                         onDislike={handleDislike}
-                        isStreaming={index === messages.length - 1 && isStreaming}
+                        isStreaming={index === lastAIMessageIndex && isStreaming}
+                        isLastAIMessage={index === lastAIMessageIndex}
                     />
                 ))}
             </div>
