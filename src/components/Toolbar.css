@@ -1,0 +1,56 @@
+.toolbar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 0 10px 10px 0;
+  z-index: 1000;
+}
+
+.tool-item {
+  margin: 10px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tool-item svg {
+  fill: white;
+}
+
+.tool-item:hover {
+  transform: scale(1.1);
+}
+
+.tool-item:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.toolbar .tool-item:first-child {
+  margin-bottom: 20px; /* 给首页图标下方添加更多空间 */
+}
+
+.toolbar .tool-item:first-child svg {
+  width: 28px; /* 让首页图标稍微大一些 */
+  height: 28px;
+  fill: #4CAF50; /* 给首页图标一个不同的颜色 */
+}
+
+.tool-item.selected {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+}

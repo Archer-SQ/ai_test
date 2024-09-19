@@ -1,5 +1,53 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Arial', sans-serif;
+}
+
 .App {
   text-align: center;
+  padding: 20px;
+  min-height: 100vh;
+  background-image: url('https://source.unsplash.com/1600x900/?nature,water');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 10px;
+  padding-bottom: 40px;
+  padding-left: 60px; /* 为工具栏留出空间 */
+  position: relative;
+}
+
+.content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 80px; /* 为固定标题留出空间 */
+}
+
+.tool-content {
+  width: 100%;
+  margin-top: 20px;
+}
+
+h1 {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px 20px;
+  border-radius: 20px;
+  color: #ffffff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 30px;
 }
 
 .App-logo {
@@ -35,4 +83,33 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.login-button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.login-button:active {
+  background-color: #3d8b40;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.login-container h1 {
+  position: static;
+  transform: none;
+  margin-bottom: 30px;
 }
