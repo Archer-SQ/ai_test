@@ -196,7 +196,7 @@ const App: React.FC = () => {
       case 'history':
         return '历史记录';
       case 'notifications':
-        return '通知消';
+        return '通知消息';  // 修正这一行
       case 'balance':
         return '账户余额';
       case 'profile':

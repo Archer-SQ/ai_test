@@ -33,7 +33,7 @@ const Message = React.memo(
         message: Message
         index: number
         onRegenerate: (index: number) => void
-        onCopy: (text: string) => void
+        onCopy: (text: string, isUser: boolean) => void
         onLike: (index: number) => void
         onDislike: (index: number) => void
         isStreaming: boolean
@@ -60,12 +60,12 @@ const Message = React.memo(
                     {isHovered && !isStreaming && (
                         <div className="message-actions">
                             {message.isUser ? (
-                                <button onClick={() => onCopy(message.text)} title="复制">
+                                <button onClick={() => onCopy(message.text, message.isUser)} title="复制">
                                     📋
                                 </button>
                             ) : (
                                 <>
-                                    <button onClick={() => onCopy(message.text)} title="复制">
+                                    <button onClick={() => onCopy(message.text, message.isUser)} title="复制">
                                         📋
                                     </button>
                                     {isLastAIMessage && (
@@ -169,6 +169,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         const newMessages = [...messages, { text: input, isUser: true, avatar: userAvatar }];
         setMessages(newMessages);
         setInput('');
+        setLastUserMessage(input);
 
         const newHistory = [...chatHistory, userMessage];
         setChatHistory(newHistory);
@@ -227,7 +228,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     }
 
     const handleRegenerate = async () => {
-        if (!lastUserMessage) return;
+        if (!lastUserMessage || isStreaming) return;
 
         setIsStreaming(true);
 
@@ -254,10 +255,12 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
             }
 
             if (fullResponse.trim() === '') {
-                throw new Error('No response received');
+                throw new Error('未收到响应');
             }
+
+            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse }]);
         } catch (error) {
-            console.error('Error generating response:', error);
+            console.error('生成响应时出错:', error);
             setMessages(prevMessages => {
                 const newMessages = [...prevMessages];
                 newMessages[newMessages.length - 1] = {
@@ -310,7 +313,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                         message={message} 
                         index={index}
                         onRegenerate={handleRegenerate}
-                        onCopy={(text) => handleCopy(text, message.isUser)}
+                        onCopy={(text, isUser) => handleCopy(text, isUser)}
                         onLike={handleLike}
                         onDislike={handleDislike}
                         isStreaming={index === lastAIMessageIndex && isStreaming}
