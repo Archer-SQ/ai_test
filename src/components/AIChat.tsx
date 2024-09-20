@@ -131,10 +131,10 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const [isFocused, setIsFocused] = useState(false)
     const MAX_CHARS = 200
     const [lastUserMessage, setLastUserMessage] = useState('');
-    const [chatHistory, setChatHistory] = useState<HistoryItem[]>([]);
+    const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([]);
 
     useEffect(() => {
-        setUserAvatar('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4em0yLTEwYy0xLjEgMC0yIC45LTIgMnMuOSAyIDIgMiAyLS45IDItMi0uOS0yLTItMnptLTQgMGMtMS4xIDAtMiAuOS0yIDJzLjkgMiAyIDIgMi0uOSAyLTItLjktMi0yLTJ6bTIgN2MtMi4zMyAwLTQuMzEtMS40Ni01LjExLTMuNWgxMC4yMmMtLjggMi4wNC0yLjc4IDMuNS01LjExIDMuNXoiIGZpbGw9IiMwMDdiZmYiLz48L3N2Zz4=');
+        setUserAvatar('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4em0yLTEwYy0xLjEgMC0yIC45LTIgMnMuOSAyIDIgMiAyLS45IDItMnptLTQgMGMtMS4xIDAtMiAuOTQtMiAxcy40NSAxIDEgMSAxLS40NSAxLTEtLjQ1LTEtMS0xem0tNy45NCA0LjYxYy4xOS42My43NiAxLjM5IDEuODggMS4zOSAxLjEyIDAgMS45My0uNzYgMi4xMy0xLjM5aDEuODZjLS40NiAxLjk3LTIuMjQgMy4zOS00LjM5IDMuMzlzLTMuOTMtMS40Mi00LjM5LTMuMzloMS45M3oiIGZpbGw9IiMwMDdiZmYiLz48L3N2Zz4=');
         setAiAvatar('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTIyIDEyYzAgNS41Mi00LjQ4IDEwLTEwIDEwUzIgMTcuNTIgMiAxMiA2LjQ4IDIgMTIgMnMxMCA0LjQ4IDEwIDEwek0xMiAzYy00Ljk3IDAtOSA0LjAzLTkgOXM0LjAzIDkgOSA5IDktNC4wMyA5LTktNC4wMy05LTktOXptMCA4Yy0uNTUgMC0xIC40NS0xIDFzLjQ1IDEgMSAxIDEtLjQ1IDEtMS0uNDUtMS0xLTF6bTQgMGMtLjU1IDAtMSAuNDUtMSAxcy40NSAxIDEgMSAxLS40NSAxLTEtLjQ1LTEtMS0xem0tNy45NCA0LjYxYy4xOS42My43NiAxLjM5IDEuODggMS4zOSAxLjEyIDAgMS45My0uNzYgMi4xMy0xLjM5aDEuODZjLS40NiAxLjk3LTIuMjQgMy4zOS00LjM5IDMuMzlzLTMuOTMtMS40Mi00LjM5LTMuMzloMS45M3oiIGZpbGw9IiM0Y2FmNTAiLz48L3N2Zz4=');
     }, [])
 
@@ -163,31 +163,27 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     }, []);
 
     const handleSendMessage = async () => {
-        if (isStreaming || !input.trim()) return;
+        if (input.trim() === '' || isStreaming) return;
 
-        const userMessage: Message = {
-            text: input,
-            isUser: true,
-            avatar: userAvatar,
-        };
-
-        setMessages(prevMessages => [...prevMessages, userMessage]);
-        const currentInput = input.trim();
+        const userMessage = { role: 'user', content: input };
+        const newMessages = [...messages, { text: input, isUser: true, avatar: userAvatar }];
+        setMessages(newMessages);
         setInput('');
+
+        const newHistory = [...chatHistory, userMessage];
+        setChatHistory(newHistory);
+
         setIsStreaming(true);
-        setLastUserMessage(currentInput);
+        let fullResponse = '';
 
         try {
-            const aiMessage: Message = {
-                text: '',
-                isUser: false,
-                avatar: aiAvatar,
-            };
-            setMessages(prevMessages => [...prevMessages, aiMessage]);
+            const stream = generateStreamResponse(input, chatHistory);
             
-            let fullResponse = '';
-            for await (const char of generateStreamResponse(currentInput)) {
-                fullResponse += char;
+            // 添加一个新的空白AI消息
+            setMessages(prevMessages => [...prevMessages, { text: '', isUser: false, avatar: aiAvatar }]);
+
+            for await (const chunk of stream) {
+                fullResponse += chunk;
                 setMessages(prevMessages => {
                     const newMessages = [...prevMessages];
                     newMessages[newMessages.length - 1] = {
@@ -196,7 +192,6 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                     };
                     return newMessages;
                 });
-                // 添加一个小延迟，让React有时间更新状态
                 await new Promise(resolve => setTimeout(resolve, 10));
             }
 
@@ -204,16 +199,14 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 throw new Error('未收到响应');
             }
 
-            // 对话完成后，保存完整的对话到历史记录
-            saveToHistory(currentInput, fullResponse.trim());
-
+            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse }]);
         } catch (error) {
             console.error('生成响应时出错:', error);
             setMessages(prevMessages => {
                 const newMessages = [...prevMessages];
                 newMessages[newMessages.length - 1] = {
                     ...newMessages[newMessages.length - 1],
-                    text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。`,
+                    text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。如果问题持续，请联系支持团队。`,
                 };
                 return newMessages;
             });
@@ -222,25 +215,8 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         }
     };
 
-    const saveToHistory = (userQuestion: string, aiAnswer: string) => {
-        if (userQuestion && aiAnswer) {
-            const newHistoryItem: HistoryItem = {
-                id: Date.now().toString(),
-                userQuestion,
-                aiAnswer,
-                timestamp: new Date().toLocaleString()
-            };
-
-            const storedHistory = sessionStorage.getItem('chatHistory');
-            const chatHistory = storedHistory ? JSON.parse(storedHistory) : [];
-            const updatedHistory = [...chatHistory, newHistoryItem];
-            sessionStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
-        }
-    };
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const text = e.target.value
-        console.log('Input changed:', text) // 添加这行
         if (text.length <= MAX_CHARS) {
             setInput(text)
         }
@@ -264,7 +240,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
             setMessages(prevMessages => [...prevMessages, aiMessage]);
 
             let fullResponse = '';
-            for await (const chunk of generateStreamResponse(lastUserMessage)) {
+            for await (const chunk of generateStreamResponse(lastUserMessage, chatHistory)) {
                 fullResponse += chunk;
                 setMessages(prevMessages => {
                     const newMessages = [...prevMessages];

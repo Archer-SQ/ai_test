@@ -38,24 +38,29 @@ function getWebsocketUrl(): string {
 }
 
 export async function* generateStreamResponse(
-    prompt: string
+    prompt: string,
+    history: Array<{ role: string; content: string }>
 ): AsyncGenerator<string, void, unknown> {
-    const maxRetries = 5;
     let retries = 0;
+    const maxRetries = 3;
 
-    while (retries < maxRetries) {
+    while (true) {
         try {
-            const ws = new WebSocket(getWebsocketUrl());
+            const url = getWebsocketUrl();
+            const ws = new WebSocket(url);
 
             yield* await new Promise<AsyncGenerator<string, void, unknown>>((resolve, reject) => {
                 const generator = (async function* () {
                     while (true) {
-                        const data = await new Promise<string | Buffer | ArrayBuffer>(resolve => {
+                        const data = await new Promise<string | Buffer | ArrayBuffer>((resolve, reject) => {
                             const handleMessage = (event: MessageEvent) => {
                                 ws.removeEventListener('message', handleMessage);
                                 resolve(event.data);
                             };
                             ws.addEventListener('message', handleMessage);
+                            ws.addEventListener('error', (error) => {
+                                reject(new Error(`WebSocket错误: ${error}`));
+                            });
                         });
                         const response = JSON.parse(
                             typeof data === 'string' ? data : data.toString()
@@ -92,21 +97,25 @@ export async function* generateStreamResponse(
                         },
                         payload: {
                             message: {
-                                text: [{ role: 'user', content: prompt }],
+                                text: [...history, { role: 'user', content: prompt }],
                             },
                         },
                     };
 
                     if (!SPARK_APP_ID) {
                         console.error('SPARK_APP_ID 未设置');
-                        throw new Error('SPARK_APP_ID 未设置');
+                        reject(new Error('SPARK_APP_ID 未设置'));
+                        return;
                     }
 
                     ws.send(JSON.stringify(data));
                     resolve(generator);
                 });
 
-                ws.addEventListener('error', reject);
+                ws.addEventListener('error', (error) => {
+                    console.error('WebSocket连接错误:', error);
+                    reject(error);
+                });
             });
 
             return;
