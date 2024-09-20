@@ -69,6 +69,10 @@
     word-wrap: break-word;
 }
 
+.message p {
+    margin: 0;
+}
+
 .user .message {
     background-color: #007bff;
     color: white;
@@ -425,7 +429,7 @@ input {
 .thinking-icon {
     position: absolute;
     top: -25px;
-    left: 40%;  /* 将左侧位置从 45% 调整到 40%，使其更往左 */
+    left: 40%; /* 将左侧位置从 45% 调整到 40%，使其更往左 */
     transform: translateX(-50%);
     width: 24px;
     height: 24px;
@@ -435,6 +439,10 @@ input {
 }
 
 @keyframes blink {
-    0% { opacity: 0.3; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
 }

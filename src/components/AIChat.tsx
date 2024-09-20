@@ -3,6 +3,9 @@ import './AIChat.css'
 import { generateStreamResponse } from '../services/sparkapi'
 import { Spin } from 'antd'
 import styled from 'styled-components'
+import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface Message {
     text: string
@@ -40,6 +43,27 @@ const ThinkingIcon = styled.div`
     }
 `
 
+const CodeBlock = styled.div`
+    position: relative;
+    margin: 1em 0;
+`
+
+const CopyButton = styled.button`
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #444;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 12px;
+    cursor: pointer;
+    &:hover {
+        background: #555;
+    }
+`
+
 const Message = React.memo(
     ({
         message,
@@ -73,6 +97,34 @@ const Message = React.memo(
             }
         }, [isStreaming, isLastAIMessage, message.text])
 
+        const copyCode = (code: string) => {
+            navigator.clipboard.writeText(code)
+            // 可以添加一个提示，表示代码已复制
+        }
+
+        const renderers = {
+            code: ({ node, inline, className, children, ...props }: any) => {
+                const match = /language-(\w+)/.exec(className || '')
+                return !inline && match ? (
+                    <CodeBlock>
+                        <CopyButton onClick={() => copyCode(String(children))}>复制</CopyButton>
+                        <SyntaxHighlighter
+                            style={vscDarkPlus}
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                        >
+                            {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                    </CodeBlock>
+                ) : (
+                    <code className={className} {...props}>
+                        {children}
+                    </code>
+                )
+            },
+        }
+
         return (
             <div
                 className={`message-container ${message.isUser ? 'user' : 'ai'} ${
@@ -102,7 +154,13 @@ const Message = React.memo(
                     </div>
                 )}
                 <div className="message-wrapper">
-                    <div className="message">{showSpin ? <Spin size="small" /> : message.text}</div>
+                    <div className="message">
+                        {showSpin ? (
+                            <Spin size="small" />
+                        ) : (
+                            <ReactMarkdown components={renderers}>{message.text}</ReactMarkdown>
+                        )}
+                    </div>
                     {isHovered && !isStreaming && (
                         <div className="message-actions">
                             {message.isUser ? (
