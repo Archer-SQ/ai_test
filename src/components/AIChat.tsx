@@ -250,7 +250,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const [isFocused, setIsFocused] = useState(false)
     const MAX_CHARS = 200
     const [lastUserMessage, setLastUserMessage] = useState('')
-    const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([])
+    const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string; timestamp: string }>>([])
 
     useEffect(() => {
         setUserAvatar(
@@ -281,14 +281,26 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         // 组件加载时，从 sessionStorage 读取历史记录
         const storedHistory = sessionStorage.getItem('chatHistory')
         if (storedHistory) {
-            setChatHistory(JSON.parse(storedHistory))
+            try {
+                const parsedHistory = JSON.parse(storedHistory)
+                console.log('Loaded history:', parsedHistory)
+                setChatHistory(parsedHistory)
+            } catch (error) {
+                console.error('Error parsing chat history:', error)
+            }
         }
     }, [])
+
+    useEffect(() => {
+        if (chatHistory.length > 0) {
+            sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory))
+        }
+    }, [chatHistory])
 
     const handleSendMessage = async () => {
         if (input.trim() === '' || isStreaming) return
 
-        const userMessage = { role: 'user', content: input }
+        const userMessage = { role: 'user', content: input, timestamp: new Date().toISOString() }
         const newMessages = [...messages, { text: input, isUser: true, avatar: userAvatar }]
         setMessages(newMessages)
         setInput('')
@@ -301,7 +313,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         let fullResponse = ''
 
         try {
-            const stream = generateStreamResponse(input, chatHistory)
+            const stream = generateStreamResponse(input, newHistory)
 
             // 添加一个新的空白AI消息
             setMessages(prevMessages => [
@@ -326,7 +338,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 throw new Error('未收到响应')
             }
 
-            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse }])
+            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse, timestamp: new Date().toISOString() }])
         } catch (error) {
             console.error('生成响应时出错:', error)
             setMessages(prevMessages => {
@@ -386,7 +398,7 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 throw new Error('未收到响应')
             }
 
-            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse }])
+            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse, timestamp: new Date().toISOString() }])
         } catch (error) {
             console.error('生成响应时出错:', error)
             setMessages(prevMessages => {

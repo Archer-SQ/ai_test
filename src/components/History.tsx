@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 interface HistoryItem {
-  id: string;
-  userQuestion: string;
-  aiAnswer: string;
+  role: string;
+  content: string;
   timestamp: string;
 }
 
@@ -54,6 +53,12 @@ const Timestamp = styled.span`
   align-self: ${props => props.role === 'user' ? 'flex-end' : 'flex-start'};
 `;
 
+const Role = styled.span`
+  font-weight: bold;
+  margin-bottom: 5px;
+  align-self: ${props => props.role === 'user' ? 'flex-end' : 'flex-start'};
+`;
+
 const History: React.FC = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
@@ -61,34 +66,66 @@ const History: React.FC = () => {
     const loadHistory = () => {
       const storedHistory = sessionStorage.getItem('chatHistory');
       if (storedHistory) {
-        setHistoryItems(JSON.parse(storedHistory));
+        try {
+          const parsedHistory = JSON.parse(storedHistory);
+          console.log('Loaded history:', parsedHistory);
+          setHistoryItems(parsedHistory);
+        } catch (error) {
+          console.error('Error parsing chat history:', error);
+        }
       }
     };
 
     loadHistory();
-    window.addEventListener('storage', loadHistory);
+
+    // 添加事件监听器以检测 sessionStorage 的变化
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'chatHistory' && event.newValue) {
+        loadHistory();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      window.removeEventListener('storage', loadHistory);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date');
+      }
+      return date.toLocaleString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return '无效日期';
+    }
+  };
 
   return (
     <HistoryContainer>
       {historyItems.length > 0 ? (
-        historyItems.map((item) => (
-          <MessageContainer key={item.id}>
-            {item.userQuestion && (
-              <MessageBubble role="user">
-                <Content>{item.userQuestion}</Content>
-              </MessageBubble>
-            )}
-            {item.aiAnswer && (
-              <MessageBubble role="assistant">
-                <Content>{item.aiAnswer}</Content>
-              </MessageBubble>
-            )}
-            <Timestamp>{item.timestamp}</Timestamp>
+        historyItems.map((item, index) => (
+          <MessageContainer key={index}>
+            <Role role={item.role as 'user' | 'assistant'}>
+              {item.role === 'user' ? '用户' : 'AI助手'}
+            </Role>
+            <MessageBubble role={item.role as 'user' | 'assistant'}>
+              <Content>{item.content}</Content>
+            </MessageBubble>
+            <Timestamp role={item.role as 'user' | 'assistant'}>
+              {formatTimestamp(item.timestamp)}
+            </Timestamp>
           </MessageContainer>
         ))
       ) : (
