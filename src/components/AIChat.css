@@ -27,11 +27,10 @@
     border: 1px solid #e0e0e0;
     border-radius: 5px;
     background-color: #f0f0f0;
-    background-image: 
-      linear-gradient(45deg, #e0e0e0 25%, transparent 25%), 
-      linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
-      linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+    background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+        linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+        linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
@@ -279,7 +278,7 @@ input {
 /* 确保输入区域不会被挤压 */
 .input-area {
     flex-shrink: 0;
-    margin-bottom: 20px; /* 在输入区域下方添加一些空白 */
+    margin-bottom: 20px; /* 在输入区域下��添加一些空白 */
 }
 
 /* 在 App.css 中添加以下样式 */
@@ -386,12 +385,12 @@ input {
 
 /* 保持现有的 .message-wrapper 样式不变 */
 .message-wrapper {
-    /* 现有的样式 */
+    /* 现有式 */
 }
 
 /* 为机器人消息添加特定式 */
 .message-container:not(.user) .message-wrapper {
-    max-width: 90%; /* 调整这个值来缩短机器人消息盒子的宽度 */
+    max-width: 90%; /* 调整这个值来缩短机器人消盒子的宽度 */
     margin-right: auto; /* 将消息靠左对齐 */
 }
 
@@ -402,17 +401,40 @@ input {
 }
 
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 .blinking-cursor {
-  display: inline-block;
-  width: 0.5em;  /* 调整宽度 */
-  height: 0.1em;  /* 调整高度 */
-  background-color: #333;
-  margin-left: 0.1em;
-  vertical-align: baseline;  /* 使下划线位于基线 */
-  animation: blink 0.7s infinite;
+    display: inline-block;
+    width: 0.5em; /* 调整宽度 */
+    height: 0.1em; /* 调整高度 */
+    background-color: #333;
+    margin-left: 0.1em;
+    vertical-align: baseline; /* 使下划线位于基线 */
+    animation: blink 0.7s infinite;
+}
+
+.thinking-icon {
+    position: absolute;
+    top: -25px;
+    left: 40%;  /* 将左侧位置从 45% 调整到 40%，使其更往左 */
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23000000"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>');
+    background-size: cover;
+    animation: blink 1s infinite alternate;
+}
+
+@keyframes blink {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; }
 }

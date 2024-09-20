@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import './AIChat.css'
 import { generateStreamResponse } from '../services/sparkapi'
 import { Spin } from 'antd'
+import styled from 'styled-components'
 
 interface Message {
     text: string
@@ -19,6 +20,25 @@ const Avatar = React.memo(({ src, alt }: { src: string; alt: string }) => (
         <img src={src} alt={alt} className="avatar" />
     </div>
 ))
+
+const ThinkingIcon = styled.div`
+    position: absolute;
+    top: -25px;
+    left: 43%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    animation: blink 1s infinite alternate;
+
+    @keyframes blink {
+        0% {
+            opacity: 0.3;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+`
 
 const Message = React.memo(
     ({
@@ -43,7 +63,9 @@ const Message = React.memo(
         const [isHovered, setIsHovered] = useState(false)
         const [showLikeAnimation, setShowLikeAnimation] = useState(false)
         const [showDislikeAnimation, setShowDislikeAnimation] = useState(false)
-        const [showSpin, setShowSpin] = useState(isStreaming && isLastAIMessage && message.text.length === 0)
+        const [showSpin, setShowSpin] = useState(
+            isStreaming && isLastAIMessage && message.text.length === 0
+        )
 
         useEffect(() => {
             if (isStreaming && isLastAIMessage && message.text.length > 0) {
@@ -59,15 +81,28 @@ const Message = React.memo(
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                {!message.isUser && <Avatar src={message.avatar} alt="AI头像" />}
-                <div className="message-wrapper">
-                    <div className="message">
-                        {showSpin ? (
-                            <Spin size="small" />
-                        ) : (
-                            message.text
+                {!message.isUser && (
+                    <div style={{ position: 'relative' }}>
+                        <Avatar src={message.avatar} alt="AI头像" />
+                        {isStreaming && isLastAIMessage && (
+                            <ThinkingIcon>
+                                <svg viewBox="0 0 24 24" width="24" height="24">
+                                    <text x="4" y="20" fontSize="12" fill="green">
+                                        ?
+                                    </text>
+                                    <text x="8" y="20" fontSize="12" fill="green">
+                                        ?
+                                    </text>
+                                    <text x="12" y="20" fontSize="12" fill="green">
+                                        ?
+                                    </text>
+                                </svg>
+                            </ThinkingIcon>
                         )}
                     </div>
+                )}
+                <div className="message-wrapper">
+                    <div className="message">{showSpin ? <Spin size="small" /> : message.text}</div>
                     {isHovered && !isStreaming && (
                         <div className="message-actions">
                             {message.isUser ? (
@@ -160,8 +195,12 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([])
 
     useEffect(() => {
-        setUserAvatar(`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23007bff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`);
-        setAiAvatar(`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm7.5-1.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zM8 15h8v2H8v-2z"/></svg>`);
+        setUserAvatar(
+            `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23007bff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
+        )
+        setAiAvatar(
+            `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff6b6b"><path d="M20 9V7c0-1.1-.9-2-2-2h-3c0-1.66-1.34-3-3-3S9 3.34 9 5H6c-1.1 0-2 .9-2 2v2c-1.66 0-3 1.34-3 3s1.34 3 3 3v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4c1.66 0 3-1.34 3-3s-1.34-3-3-3zm-2 10H6V7h12v12zm-9-6c-.83 0-1.5-.67-1.5-1.5S8.17 10 9 10s1.5.67 1.5 1.5S9.83 13 9 13zm7.5-1.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zM8 15h8v2H8v-2z"/></svg>`
+        )
     }, [])
 
     useEffect(() => {
