@@ -4,6 +4,7 @@ import AIChat from './components/AIChat'
 import Modal from './components/Modal'
 import Toolbar from './components/Toolbar'
 import History from './components/History'
+import Notifications from './components/Notifications'
 import styled from 'styled-components'
 
 const BackgroundPattern: React.FC = () => (
@@ -202,7 +203,7 @@ const App: React.FC = () => {
             case 'history':
                 return '历史记录'
             case 'notifications':
-                return '通知消息' // 修正这一行
+                return '实时热点'
             case 'balance':
                 return '账户余额'
             case 'profile':
@@ -219,7 +220,7 @@ const App: React.FC = () => {
             case 'history':
                 return <History />
             case 'notifications':
-                return <div>通知消息内容</div>
+                return <Notifications />
             case 'balance':
                 return <div>账户余额内容</div>
             case 'profile':

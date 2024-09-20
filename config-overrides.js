@@ -1,25 +1,22 @@
 const webpack = require('webpack');
-const path = require('path');
 
 module.exports = function override(config, env) {
     config.resolve.fallback = {
         ...config.resolve.fallback,
+        "process": require.resolve("process/browser"),
+        "zlib": require.resolve("browserify-zlib"),
         "stream": require.resolve("stream-browserify"),
-        "crypto": require.resolve("crypto-browserify")
+        "util": require.resolve("util"),
+        "buffer": require.resolve("buffer"),
+        "asset": require.resolve("assert"),
     };
-    
-    config.plugins = [
-        ...config.plugins,
+
+    config.plugins.push(
         new webpack.ProvidePlugin({
-            process: 'process/browser',
+            process: 'process/browser.js',
             Buffer: ['buffer', 'Buffer'],
         }),
-    ];
-
-    config.resolve.alias = {
-        ...config.resolve.alias,
-        'crypto-browserify': path.resolve(__dirname, 'node_modules/crypto-browserify'),
-    };
+    );
 
     return config;
 }
