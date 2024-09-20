@@ -139,13 +139,13 @@ const Message = React.memo(
                         {isStreaming && isLastAIMessage && (
                             <ThinkingIcon>
                                 <svg viewBox="0 0 24 24" width="24" height="24">
-                                    <text x="4" y="20" fontSize="12" fill="green">
+                                    <text x="4" y="20" fontSize="12" fill="red">
                                         ?
                                     </text>
-                                    <text x="8" y="20" fontSize="12" fill="green">
+                                    <text x="8" y="20" fontSize="12" fill="red">
                                         ?
                                     </text>
-                                    <text x="12" y="20" fontSize="12" fill="green">
+                                    <text x="12" y="20" fontSize="12" fill="red">
                                         ?
                                     </text>
                                 </svg>
