@@ -59,6 +59,27 @@ const Role = styled.span`
   align-self: ${props => props.role === 'user' ? 'flex-end' : 'flex-start'};
 `;
 
+const NoDataContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+`;
+
+const NoDataSVG = styled.img`
+  width: 400px;  // 将宽度设置为原来的两倍
+  height: auto;
+  margin-bottom: 20px;
+`;
+
+const NoDataText = styled.p`
+  font-size: 18px;
+  color: #666;
+  text-align: center;
+`;
+
 const History: React.FC = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
@@ -129,7 +150,10 @@ const History: React.FC = () => {
           </MessageContainer>
         ))
       ) : (
-        <div>暂无聊天记录</div>
+        <NoDataContainer>
+          <NoDataSVG src="https://gw.alipayobjects.com/zos/rmsportal/KpnpchXsobRgLElEozzI.svg" alt="无数据" />
+          <NoDataText>暂无聊天记录</NoDataText>
+        </NoDataContainer>
       )}
     </HistoryContainer>
   );
