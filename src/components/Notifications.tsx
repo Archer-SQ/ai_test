@@ -29,7 +29,8 @@ interface NewsDetail {
 const RealtimeHotspotContainer = styled.div`
     width: 100%;
     max-width: 100%;
-    height: 75vh;
+    margin-top: 10px;
+    height: 80vh;
     display: flex;
     flex-direction: column;
     background-color: rgba(255, 255, 255, 0.8);
