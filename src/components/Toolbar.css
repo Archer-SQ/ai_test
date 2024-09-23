@@ -19,6 +19,11 @@
 
 .tool-item svg {
   fill: white;
+  transition: fill 0.3s ease;
+}
+
+.tool-item.selected svg {
+  fill: #4CAF50;
 }
 
 .tool-item:hover {
@@ -61,17 +66,14 @@
   }
 }
 
+/* 删除或注释掉以下内容
 .toolbar .tool-item:first-child {
-  margin-bottom: 20px; /* 给首页图标下方添加更多空间 */
+  margin-bottom: 20px;
 }
 
 .toolbar .tool-item:first-child svg {
-  width: 28px; /* 让首页图标稍微大一些 */
+  width: 28px;
   height: 28px;
-  fill: #4CAF50; /* 给首页图标一个不同的颜色 */
+  fill: #4CAF50; 
 }
-
-.tool-item.selected {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-}
+*/

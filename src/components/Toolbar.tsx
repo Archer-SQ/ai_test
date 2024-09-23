@@ -26,7 +26,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ selectedTool, setSelectedTool }) => {
       {tools.map((tool, index) => (
         <div 
           key={index} 
-          className={`tool-item ${selectedTool === tool.id ? 'active' : ''}`} 
+          className={`tool-item ${selectedTool === tool.id ? 'selected' : ''}`} 
           title={tool.title}
           onClick={() => setSelectedTool(tool.id)}
         >
