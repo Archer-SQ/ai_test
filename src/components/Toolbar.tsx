@@ -1,5 +1,49 @@
-import React from 'react';
-import './Toolbar.css';
+import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+
+const ToolbarContainer = styled.div<{ isVisible: boolean }>`
+  position: fixed;
+  left: ${props => props.isVisible ? '0' : '-60px'};
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 0 10px 10px 0;
+  z-index: 1000;
+  transition: left 0.3s ease-in-out;
+
+  @media (max-width: 768px) {
+    left: 0;
+    top: auto;
+    bottom: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+  }
+`;
+
+const ToolItem = styled.div<{ isSelected: boolean }>`
+  margin: 10px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  svg {
+    fill: ${props => props.isSelected ? '#4CAF50' : 'white'};
+    transition: fill 0.3s ease;
+  }
+
+  &:hover svg {
+    fill: #4CAF50;
+  }
+
+  @media (max-width: 768px) {
+    margin: 0 10px;
+  }
+`;
 
 interface ToolbarProps {
   selectedTool: string;
@@ -7,6 +51,36 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ selectedTool, setSelectedTool }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsVisible(true);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientX <= 10) {
+        setIsVisible(true);
+      } else if (e.clientX > 70) {
+        setIsVisible(false);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [isMobile]);
+
   const tools = [
     { icon: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z', title: '首页', id: 'chat' },
     { icon: 'M3 3h18v18H3V3zm16 16V5H5v14h14zm-5-7v-3h3v3h-3zm0 5v-3h3v5h-5v-2h2zm-9-5v-3h3v3H5zm0 5v-3h3v3H5zm4-3h3v3H9v-3z', title: '历史记录', id: 'history' },
@@ -15,27 +89,21 @@ const Toolbar: React.FC<ToolbarProps> = ({ selectedTool, setSelectedTool }) => {
     { icon: 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z', title: '个人资料', id: 'profile' },
   ];
 
-  const handleHomeClick = () => {
-    // 处理首页点击事件，例如跳转到主页
-    console.log('Home clicked');
-    setSelectedTool('chat');
-  };
-
   return (
-    <div className="toolbar">
+    <ToolbarContainer isVisible={isVisible || isMobile}>
       {tools.map((tool, index) => (
-        <div 
+        <ToolItem 
           key={index} 
-          className={`tool-item ${selectedTool === tool.id ? 'selected' : ''}`} 
-          title={tool.title}
           onClick={() => setSelectedTool(tool.id)}
+          title={tool.title}
+          isSelected={selectedTool === tool.id}
         >
           <svg viewBox="0 0 24 24" width="24" height="24">
             <path d={tool.icon} />
           </svg>
-        </div>
+        </ToolItem>
       ))}
-    </div>
+    </ToolbarContainer>
   );
 };
 

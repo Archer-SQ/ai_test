@@ -29,11 +29,10 @@ interface NewsDetail {
 const RealtimeHotspotContainer = styled.div`
     width: 100%;
     max-width: 100%;
-    margin-top: 10px;
-    height: 80vh;
+    padding: 20px;
+    background-color: #f5f5f5;
     display: flex;
     flex-direction: column;
-    background-color: rgba(255, 255, 255, 0.8);
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 `
