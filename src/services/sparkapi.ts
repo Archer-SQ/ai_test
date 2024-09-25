@@ -39,12 +39,17 @@ function getWebsocketUrl(): string {
 
 export async function* generateStreamResponse(
     prompt: string,
-    history: Array<{ role: string; content: string }>
+    history: Array<{ role: string; content: string }>,
+    signal: AbortSignal
 ): AsyncGenerator<string, void, unknown> {
     let retries = 0;
     const maxRetries = 3;
 
     while (true) {
+        if (signal.aborted) {
+            console.log('Stream generation aborted')
+            return
+        }
         try {
             const url = getWebsocketUrl();
             const ws = new WebSocket(url);

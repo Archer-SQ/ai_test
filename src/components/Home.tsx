@@ -25,9 +25,12 @@ const ContentContainer = styled.div`
     flex: 1;
     padding: 20px;
     display: flex;
+    width: calc(100% - 60px);
 
     @media (max-width: 768px) {
+        padding: 10px;
         padding-bottom: 60px;
+        width: calc(100% - 40px);
     }
 `
 

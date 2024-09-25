@@ -11,6 +11,7 @@ interface Message {
     text: string
     isUser: boolean
     avatar: string
+    isRegenerated?: boolean
 }
 
 interface AIChatProps {
@@ -233,24 +234,23 @@ const LoadingDots = () => (
     </div>
 )
 
-interface HistoryItem {
-    id: string
-    userQuestion: string
-    aiAnswer: string
-    timestamp: string
-}
-
 const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [isStreaming, setIsStreaming] = useState(false)
+    const [abortController, setAbortController] = useState<AbortController | null>(null)
     const chatHistoryRef = useRef<HTMLDivElement>(null)
     const [userAvatar, setUserAvatar] = useState('')
     const [aiAvatar, setAiAvatar] = useState('')
     const [isFocused, setIsFocused] = useState(false)
     const MAX_CHARS = 200
     const [lastUserMessage, setLastUserMessage] = useState('')
-    const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string; timestamp: string }>>([])
+    const [chatHistory, setChatHistory] = useState<
+        Array<{ role: string; content: string; timestamp: string }>
+    >(() => {
+        const savedHistory = sessionStorage.getItem('chatHistory')
+        return savedHistory ? JSON.parse(savedHistory) : []
+    })
 
     useEffect(() => {
         setUserAvatar(
@@ -278,20 +278,6 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     }, [messages])
 
     useEffect(() => {
-        // 组件加载时，从 sessionStorage 读取历史记录
-        const storedHistory = sessionStorage.getItem('chatHistory')
-        if (storedHistory) {
-            try {
-                const parsedHistory = JSON.parse(storedHistory)
-                console.log('Loaded history:', parsedHistory)
-                setChatHistory(parsedHistory)
-            } catch (error) {
-                console.error('Error parsing chat history:', error)
-            }
-        }
-    }, [])
-
-    useEffect(() => {
         if (chatHistory.length > 0) {
             sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory))
         }
@@ -310,10 +296,12 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         setChatHistory(newHistory)
 
         setIsStreaming(true)
+        const controller = new AbortController()
+        setAbortController(controller)
         let fullResponse = ''
 
         try {
-            const stream = generateStreamResponse(input, newHistory)
+            const stream = generateStreamResponse(input, newHistory, controller.signal)
 
             // 添加一个新的空白AI消息
             setMessages(prevMessages => [
@@ -322,6 +310,11 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
             ])
 
             for await (const chunk of stream) {
+                if (controller.signal.aborted) {
+                    console.log('Stream aborted')
+                    break
+                }
+
                 fullResponse += chunk
                 setMessages(prevMessages => {
                     const newMessages = [...prevMessages]
@@ -334,25 +327,68 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 await new Promise(resolve => setTimeout(resolve, 10))
             }
 
-            if (fullResponse.trim() === '') {
-                throw new Error('未收到响应')
+            if (!controller.signal.aborted) {
+                setChatHistory(prev => [
+                    ...prev,
+                    {
+                        role: 'assistant',
+                        content: fullResponse,
+                        timestamp: new Date().toISOString(),
+                    },
+                ])
             }
+        } catch (error: unknown) {
+            if ((error as Error).name === 'AbortError') {
+                console.log('响应生成被用户终止')
+            } else {
+                console.error('生成响应时出错:', error)
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages]
+                    newMessages[newMessages.length - 1] = {
+                        ...newMessages[newMessages.length - 1],
+                        text: `发生错误：${
+                            (error as Error).message || '未知错误'
+                        }，请稍后再试。如果问题持续，请联系支持团队。`,
+                    }
+                    return newMessages
+                })
+            }
+        } finally {
+            setIsStreaming(false)
+            setAbortController(null)
+        }
+    }
 
-            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse, timestamp: new Date().toISOString() }])
-        } catch (error) {
-            console.error('生成响应时出错:', error)
+    const handleAbort = () => {
+        if (abortController) {
+            abortController.abort()
+            setIsStreaming(false)
+            setAbortController(null)
+
             setMessages(prevMessages => {
                 const newMessages = [...prevMessages]
-                newMessages[newMessages.length - 1] = {
-                    ...newMessages[newMessages.length - 1],
-                    text: `发生错误：${
-                        (error as Error).message || '未知错误'
-                    }，请稍后再试。如果问题持，请联系支持团队。`,
+                const lastMessage = newMessages[newMessages.length - 1]
+                if (!lastMessage.isUser && !lastMessage.text.endsWith('（回答已终止）')) {
+                    lastMessage.text += '（回答已终止）'
+                    
+                    // 只在不是重新生成过程中才添加到历史记录
+                    if (!lastMessage.isRegenerated) {
+                        setChatHistory(prev => {
+                            const lastHistoryMessage = prev[prev.length - 1]
+                            if (lastHistoryMessage.role === 'assistant' && lastHistoryMessage.content === lastMessage.text) {
+                                return prev // 如果最后一条历史记录已经是这个终止的回答，就不再添加
+                            }
+                            return [...prev, {
+                                role: 'assistant',
+                                content: lastMessage.text,
+                                timestamp: new Date().toISOString(),
+                                isTerminated: true
+                            }]
+                        })
+                    }
                 }
                 return newMessages
             })
-        } finally {
-            setIsStreaming(false)
         }
     }
 
@@ -370,7 +406,16 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
     const handleRegenerate = async () => {
         if (!lastUserMessage || isStreaming) return
 
+        let isResponseAdded = false; // 新增标志
+
+        if (isStreaming) {
+            handleAbort()
+        }
         setIsStreaming(true)
+        const newController = new AbortController()
+        setAbortController(newController)
+
+        let fullResponse = ''
 
         try {
             const aiMessage: Message = {
@@ -380,8 +425,15 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
             }
             setMessages(prevMessages => [...prevMessages, aiMessage])
 
-            let fullResponse = ''
-            for await (const chunk of generateStreamResponse(lastUserMessage, chatHistory)) {
+            for await (const chunk of generateStreamResponse(
+                lastUserMessage,
+                chatHistory,
+                newController.signal
+            )) {
+                if (newController.signal.aborted) {
+                    console.log('重新生成被终止')
+                    break
+                }
                 fullResponse += chunk
                 setMessages(prevMessages => {
                     const newMessages = [...prevMessages]
@@ -393,24 +445,56 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                 })
                 await new Promise(resolve => setTimeout(resolve, 10))
             }
-
-            if (fullResponse.trim() === '') {
-                throw new Error('未收到响应')
+        } catch (error: unknown) {
+            if ((error as Error).name === 'AbortError') {
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages]
+                    const lastMessage = newMessages[newMessages.length - 1]
+                    if (!lastMessage.isUser && !lastMessage.text.endsWith('（回答已终止）')) {
+                        lastMessage.text += '（回答已终止）'
+                        // 在这里添加被终止的回答到历史记录
+                        if (!isResponseAdded) {
+                            setChatHistory(prev => [
+                                ...prev,
+                                {
+                                    role: 'assistant',
+                                    content: lastMessage.text,
+                                    timestamp: new Date().toISOString(),
+                                    isTerminated: true,
+                                    isRegenerated: true
+                                }
+                            ])
+                            isResponseAdded = true
+                        }
+                    }
+                    return newMessages
+                })
+            } else {
+                console.error('生成回答时出错:', error)
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages]
+                    newMessages[newMessages.length - 1] = {
+                        ...newMessages[newMessages.length - 1],
+                        text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。`,
+                    }
+                    return newMessages
+                })
             }
-
-            setChatHistory(prev => [...prev, { role: 'assistant', content: fullResponse, timestamp: new Date().toISOString() }])
-        } catch (error) {
-            console.error('生成响应时出错:', error)
-            setMessages(prevMessages => {
-                const newMessages = [...prevMessages]
-                newMessages[newMessages.length - 1] = {
-                    ...newMessages[newMessages.length - 1],
-                    text: `发生错误：${(error as Error).message || '未知错误'}，请稍后再试。`,
-                }
-                return newMessages
-            })
         } finally {
+            // 只在还没有添加过回答时添加
+            if (fullResponse.trim() !== '' && !isResponseAdded) {
+                setChatHistory(prev => [
+                    ...prev,
+                    { 
+                        role: 'assistant', 
+                        content: fullResponse + (newController.signal.aborted ? '（回答已终止）' : ''), 
+                        timestamp: new Date().toISOString(),
+                        isRegenerated: true
+                    },
+                ])
+            }
             setIsStreaming(false)
+            setAbortController(null)
         }
     }
 
@@ -444,12 +528,6 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         return acc
     }, -1)
 
-    const handleChatEnd = () => {
-        const chatHistory = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
-        chatHistory.push(messages);
-        sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    };
-
     return (
         <div className="chat-container">
             <div className="chat-history" ref={chatHistoryRef}>
@@ -467,8 +545,8 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                     />
                 ))}
             </div>
-            {isStreaming && <LoadingDots />}
             <div className="input-area">
+                {isStreaming && <LoadingDots />}
                 <div className="input-wrapper">
                     <input
                         type="text"
@@ -499,15 +577,11 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
                     )}
                 </div>
                 <button
-                    onClick={handleSendMessage}
-                    className="send-button"
-                    disabled={isStreaming}
-                    style={{
-                        opacity: isStreaming ? 0.5 : 1,
-                        cursor: isStreaming ? 'not-allowed' : 'pointer',
-                    }}
+                    onClick={isStreaming ? handleAbort : handleSendMessage}
+                    className={`send-button ${isStreaming ? 'abort-button' : ''}`}
+                    disabled={!isStreaming && input.trim() === ''}
                 >
-                    发送
+                    {isStreaming ? '终止' : '发送'}
                 </button>
             </div>
         </div>

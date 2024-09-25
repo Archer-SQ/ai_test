@@ -22,6 +22,7 @@
 }
 
 .input-area {
+    position: relative;
     display: flex;
     gap: 10px;
     align-items: flex-start;
@@ -324,7 +325,7 @@ input:focus {
 
 .loading-dots-container {
     position: absolute;
-    bottom: 80px; /* 将 loading 放在 input-area 的正上方 */
+    top: -6px;
     left: 0;
     right: 0;
     display: flex;

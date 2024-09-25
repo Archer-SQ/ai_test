@@ -48,9 +48,18 @@ const History: React.FC = () => {
         sessionStorage.getItem('chatHistory') || '[]'
     )
 
+    // 预处理聊天历史，只保留每个时间戳（精确到秒）的第一条消息
+    const uniqueHistory = chatHistory.reduce((acc, current) => {
+        const currentSeconds = new Date(current.timestamp).setMilliseconds(0);
+        if (!acc.find(item => new Date(item.timestamp).setMilliseconds(0) === currentSeconds)) {
+            acc.push(current);
+        }
+        return acc;
+    }, [] as typeof chatHistory);
+
     return (
         <HistoryContainer>
-            {chatHistory.map((message, index) => (
+            {uniqueHistory.map((message, index) => (
                 <HistoryItem key={index} role={message.role}>
                     {message.role === 'assistant' && (
                         <Avatar

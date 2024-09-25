@@ -28,13 +28,19 @@ interface NewsDetail {
 
 const RealtimeHotspotContainer = styled.div`
     height: 100%;
+    width: 100%;
     max-width: 100%;
-    padding: 20px;
     background-color: #f5f5f5;
     display: flex;
     flex-direction: column;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+        height: calc(100vh - 60px);
+        border-radius: 0;
+    }
 `
 
 const TabContainer = styled.div`
@@ -43,24 +49,48 @@ const TabContainer = styled.div`
     padding: 10px;
     background-color: #f0f0f0;
     border-bottom: 1px solid #ddd;
+    width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        padding: 5px;
+    }
+
+    /* 隐藏滚动条但保持功能 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 const Tab = styled.button<{ active: boolean }>`
     padding: 8px 16px;
     margin-right: 8px;
     border: none;
+    border-radius: 10px;
     background-color: ${props => (props.active ? '#007bff' : 'transparent')};
     color: ${props => (props.active ? 'white' : 'black')};
     cursor: pointer;
     white-space: nowrap;
+    flex-shrink: 0;
     &:hover {
         background-color: ${props => (props.active ? '#007bff' : '#e0e0e0')};
+    }
+
+    @media (max-width: 768px) {
+        padding: 6px 12px;
+        font-size: 0.9em;
     }
 `
 
 const ContentContainer = styled.div`
+    padding: 10px;
     flex: 1;
     overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+
     h3 {
         margin-top: 0;
     }
@@ -69,20 +99,24 @@ const ContentContainer = styled.div`
     scrollbar-width: none;
     -ms-overflow-style: none;
     &::-webkit-scrollbar {
-        width: 0;
-        height: 0;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        padding: 5px;
     }
 `
 
 const NewsList = styled.ul`
     list-style-type: none;
     padding: 0;
+    margin: 0;
+    width: 100%;
 `
 
 const NewsListItem = styled.li`
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     margin-bottom: 15px;
     padding: 15px;
     background-color: #ffffff;
@@ -92,6 +126,8 @@ const NewsListItem = styled.li`
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
 
     &:hover {
         transform: translateY(-3px);
@@ -115,8 +151,8 @@ const NewsListItem = styled.li`
     }
 
     @media (max-width: 768px) {
-        flex-direction: column;
-        align-items: flex-start;
+        padding: 10px;
+        margin-bottom: 10px;
     }
 `
 
@@ -131,6 +167,7 @@ const NewsTitle = styled.h3`
 
     @media (max-width: 768px) {
         font-size: 1em;
+        margin-bottom: 5px;
     }
 `
 
@@ -139,6 +176,10 @@ const NewsTime = styled.span`
     color: #888;
     display: block;
     margin-bottom: 8px;
+
+    @media (max-width: 768px) {
+        margin-bottom: 5px;
+    }
 `
 
 const NewsDigest = styled.p`
@@ -149,6 +190,7 @@ const NewsDigest = styled.p`
 
     @media (max-width: 768px) {
         font-size: 0.8em;
+        line-height: 1.3;
     }
 `
 
@@ -157,6 +199,10 @@ const NewsSource = styled.span`
     color: #007bff;
     display: block;
     margin-top: 8px;
+
+    @media (max-width: 768px) {
+        margin-top: 5px;
+    }
 `
 
 const NewsDetailContainer = styled.div`
