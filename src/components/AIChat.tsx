@@ -444,6 +444,12 @@ const AIChat: React.FC<AIChatProps> = ({ username, setCurrentModel }) => {
         return acc
     }, -1)
 
+    const handleChatEnd = () => {
+        const chatHistory = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+        chatHistory.push(messages);
+        sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    };
+
     return (
         <div className="chat-container">
             <div className="chat-history" ref={chatHistoryRef}>

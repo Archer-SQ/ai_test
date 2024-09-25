@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import AIChat from './AIChat'
 import Toolbar from './Toolbar'
@@ -25,6 +25,10 @@ const ContentContainer = styled.div`
     flex: 1;
     padding: 20px;
     display: flex;
+
+    @media (max-width: 768px) {
+        padding-bottom: 60px;
+    }
 `
 
 const ModuleWrapper = styled.div`
@@ -44,6 +48,8 @@ const Home: React.FC<HomeProps> = ({ setIsLoggedIn }) => {
     const [currentModel, setCurrentModel] = useState('generalv3.5')
     const [moduleTitle, setModuleTitle] = useState('AI 对话')
     const navigate = useNavigate()
+    const location = useLocation()
+    const username = location.state?.username || '用户'
 
     const handleLogout = () => {
         setIsLoggedIn(false)
@@ -63,7 +69,7 @@ const Home: React.FC<HomeProps> = ({ setIsLoggedIn }) => {
                 setModuleTitle('实时热点')
                 break
             case 'balance':
-                setModuleTitle('账户余额')
+                setModuleTitle('实用工具')
                 break
             case 'profile':
                 setModuleTitle('个人资料')
@@ -93,7 +99,7 @@ const Home: React.FC<HomeProps> = ({ setIsLoggedIn }) => {
     return (
         <HomeContainer>
             <Header
-                username="用户"
+                username={username}
                 avatarUrl={`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23007bff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`}
                 moduleTitle={moduleTitle}
                 modelName={currentModel}

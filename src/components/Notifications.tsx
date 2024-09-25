@@ -27,7 +27,7 @@ interface NewsDetail {
 }
 
 const RealtimeHotspotContainer = styled.div`
-    width: 100%;
+    height: 100%;
     max-width: 100%;
     padding: 20px;
     background-color: #f5f5f5;
@@ -61,7 +61,6 @@ const Tab = styled.button<{ active: boolean }>`
 const ContentContainer = styled.div`
     flex: 1;
     overflow-y: auto;
-    padding: 10px;
     h3 {
         margin-top: 0;
     }
@@ -180,10 +179,10 @@ const NewsDetailScrollContainer = styled.div`
 
 const BackButton = styled.button`
     position: absolute;
-    top: -8px;
-    left: -8px;
+    top: 4px;
+    left: 4px;
     z-index: 10;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     border: none;
     border-radius: 50%;
     width: 20px;

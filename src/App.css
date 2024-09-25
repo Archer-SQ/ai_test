@@ -4,6 +4,7 @@ html {
     padding: 0;
     height: 100%;
     font-family: 'Arial', sans-serif;
+    min-width: 412px; /* 设置最小宽度 */
 }
 
 .App {
@@ -19,6 +20,7 @@ html {
     padding-top: 10px;
     padding-bottom: 40px;
     position: relative;
+    min-width: 412px; /* 设置最小宽度 */
 }
 
 @media (max-width: 768px) {
@@ -37,11 +39,13 @@ html {
     max-width: 1200px;
     margin: 0 auto;
     padding-top: 80px; /* 为固定标题留出空间 */
+    min-width: 412px; /* 设置最小宽度 */
 }
 
 .tool-content {
     width: 100%;
     margin-top: 20px;
+    min-width: 412px; /* 设置最小宽度 */
 }
 
 h1 {

@@ -373,11 +373,6 @@ input:focus {
     }
 }
 
-/* 确保输入区域有足够的上边距 */
-.input-area {
-    margin-top: 20px; /* 减少这个值，为 loading dots 留出适当空间 */
-}
-
 .send-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;

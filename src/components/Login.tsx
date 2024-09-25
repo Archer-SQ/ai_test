@@ -231,10 +231,10 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn }) => {
     const isPasswordValid = validatePassword(password)
 
     if (isUsernameValid && isPasswordValid) {
-      if (username === 'admin' && password === 'password') {
+      if (password === '123123') {
         setIsLoggedIn(true)
         sessionStorage.setItem('isLoggedIn', 'true')
-        navigate('/home')
+        navigate('/home', { state: { username: username } })
       } else {
         setUsernameError('用户名或密码错误')
         setPasswordError('用户名或密码错误')
