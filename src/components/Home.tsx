@@ -5,7 +5,7 @@ import AIChat from './AIChat'
 import Toolbar from './Toolbar'
 import History from './History'
 import Notifications from './Notifications'
-import AccountBalance from './AccountBalance'
+import AccountBalance from './UtilityPanel'
 import Profile from './Profile'
 import Header from './Header'
 
@@ -38,7 +38,10 @@ const ModuleWrapper = styled.div`
     flex: 1;
     background-color: #ffffff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+                0 -4px 6px rgba(0, 0, 0, 0.1),
+                4px 0 6px rgba(0, 0, 0, 0.1),
+                -4px 0 6px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 `
 

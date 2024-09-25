@@ -283,7 +283,6 @@ const RealtimeHotspot: React.FC = () => {
     const [news, setNews] = useState<NewsItem[]>([])
     const [selectedNews, setSelectedNews] = useState<NewsDetail | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null)
 
     const APP_ID = 'alpttsrlpmudp3rh'
     const APP_SECRET = 'QL2WxGUmBTRvbv6Q84VaxvQxQa7rlqsz'
@@ -291,9 +290,7 @@ const RealtimeHotspot: React.FC = () => {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
     const fetchNews = useCallback(
-        async (typeId: string, retryCount = 0): Promise<void> => {
-            setLoading(true)
-            setError(null)
+        async (typeId: string): Promise<void> => {
             try {
                 await delay(1000) // 添加1秒延迟
                 const response = await axios.get<{ code: number; msg: string; data: NewsItem[] }>(
@@ -314,18 +311,8 @@ const RealtimeHotspot: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Error fetching news:', error)
-                if (
-                    error instanceof Error &&
-                    error.message.includes('请求频率过快') &&
-                    retryCount < 3
-                ) {
-                    console.log(`Retrying in ${(retryCount + 1) * 2} seconds...`)
-                    await delay((retryCount + 1) * 2000)
-                    return fetchNews(typeId, retryCount + 1)
-                }
-                setError('获取新闻列表失败，请稍后重试')
-            } finally {
-                setLoading(false)
+                await delay(2000) // 失败后等待2秒再重试
+                return fetchNews(typeId)
             }
         },
         [APP_ID, APP_SECRET]
@@ -333,8 +320,6 @@ const RealtimeHotspot: React.FC = () => {
 
     useEffect(() => {
         const fetchNewsTypes = async () => {
-            setLoading(true)
-            setError(null)
             try {
                 const response = await axios.get('https://www.mxnzp.com/api/news/types/v2', {
                     params: {
@@ -344,46 +329,48 @@ const RealtimeHotspot: React.FC = () => {
                 })
                 if (response.data.code === 1 && response.data.data.length > 0) {
                     setNewsTypes(response.data.data)
-                    const defaultTypeId = response.data.data[0].typeId
-                    setSelectedType(defaultTypeId)
-                    fetchNews(defaultTypeId)
+                    setSelectedType(response.data.data[0].typeId)
                 } else {
                     throw new Error(response.data.msg || '获取新闻类型失败')
                 }
             } catch (error) {
                 console.error('Error fetching news types:', error)
-                setError('获取新闻类型失败，请稍后重试')
-            } finally {
-                setLoading(false)
+                await delay(2000) // 失败后等待2秒再重试
+                fetchNewsTypes()
             }
         }
 
         fetchNewsTypes()
-    }, [fetchNews])
+    }, [APP_ID, APP_SECRET])
 
     useEffect(() => {
         if (selectedType) {
-            fetchNews(selectedType)
+            setLoading(true)
+            fetchNews(selectedType).finally(() => setLoading(false))
         }
     }, [selectedType, fetchNews])
 
     const handleTypeChange = (typeId: string) => {
         setSelectedType(typeId)
-        setSelectedNews(null)
     }
 
     const handleNewsClick = async (newsId: string) => {
         setLoading(true)
         try {
-            const response = await axios.get('https://www.mxnzp.com/api/news/details/v2', {
-                params: {
-                    newsId: newsId,
-                    app_id: APP_ID,
-                    app_secret: APP_SECRET,
-                },
-            })
+            const response = await axios.get<{ code: number; msg: string; data: NewsDetail }>(
+                'https://www.mxnzp.com/api/news/details/v2',
+                {
+                    params: {
+                        newsId: newsId,
+                        app_id: APP_ID,
+                        app_secret: APP_SECRET,
+                    },
+                }
+            )
             if (response.data.code === 1) {
                 setSelectedNews(response.data.data)
+            } else {
+                throw new Error(response.data.msg || '获取新闻详情失败')
             }
         } catch (error) {
             console.error('Error fetching news details:', error)
@@ -410,8 +397,6 @@ const RealtimeHotspot: React.FC = () => {
                     <SpinContainer>
                         <Spin size="large" />
                     </SpinContainer>
-                ) : error ? (
-                    <div>{error}</div>
                 ) : selectedNews ? (
                     <NewsDetailContainer>
                         <BackButton onClick={() => setSelectedNews(null)} />

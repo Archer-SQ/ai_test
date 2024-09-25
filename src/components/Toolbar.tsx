@@ -23,7 +23,6 @@ const ToolbarContainer = styled.div<{ isVisible: boolean }>`
         flex-direction: row;
         justify-content: space-around;
         width: 100%;
-        border-radius: 10px 10px 0 0;
     }
 `
 
